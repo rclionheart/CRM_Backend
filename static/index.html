@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CRM Backend</title>
+</head>
+<body>
+    <h1>Welcome, to the CRM Backend</h1>
+
+    <h3>Overview of available endpoints:</h3>
+    <ul>
+        <li>
+            <h3>POST /customers</h3>
+            <p>Create a new customer using the name, role, email and phone field.</p>
+        </li>
+        <li>
+            <h3>GET /customers</h3>
+            <p>Get list of all current customers with their details.</p>
+        </li>
+        <li>
+            <h3>GET /customers/?{id}</h3>
+            <p>Get details from specific customer using their id.</p>
+        </li>
+        <li>
+            <h3>PUT /customers/{id}</h3>
+            <p>Send id and all details fields to url to update the specific customer via id.</p>
+        </li>
+        <li>
+            <h3>DELETE /customers/{id}</h3>
+            <p>Send id for the specific customer to delete and remove from db.</p>
+        </li>
+    </ul>
+</body>
+</html>

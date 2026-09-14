@@ -79,6 +79,10 @@ func GetCustomer(w http.ResponseWriter, r *http.Request) {
 	writeError(w, http.StatusNotFound, "Customer not found")
 }
 
+func GetCustomers(w http.ResponseWriter, r *http.Request) {
+	writeJSON(w, http.StatusOK, customers)
+}
+
 func UpdateCustomer(w http.ResponseWriter, r *http.Request) {
 	var update Customer
 
@@ -203,11 +207,13 @@ func (c *Customer) validateUpdate() error {
 
 func newRouter() http.Handler {
 	mux := http.NewServeMux()
+	mux.Handle("/", http.FileServer(http.Dir("./static")))
 
 	mux.HandleFunc("POST /customers", CreateCustomer)
-	mux.HandleFunc("GET /customers", GetCustomer)
-	mux.HandleFunc("PUT /customers", UpdateCustomer)
-	mux.HandleFunc("DELETE /customer", DeleteCustomer)
+	mux.HandleFunc("GET /customers/", GetCustomer)
+	mux.HandleFunc("GET /customers", GetCustomers)
+	mux.HandleFunc("PUT /customers/", UpdateCustomer)
+	mux.HandleFunc("DELETE /customer/", DeleteCustomer)
 
 	return mux
 }
