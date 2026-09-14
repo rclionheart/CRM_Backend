@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type Customer struct {
@@ -37,30 +38,29 @@ var customers = []Customer{
 	{ID: 4, Name: "Andria", Role: "Member", Email: "andria@gmail.com", Phone: "0836891203", Contacted: false},
 }
 
-func CreateCustomer(w http.ResponseWriter, r *http.Request) []Customer {
+func CreateCustomer(w http.ResponseWriter, r *http.Request) {
 	var newID int = len(customers) + 1
 	var input CustomerInput
 
 	if err := readJSON(w, r, &input); err != nil {
 		writeError(w, http.StatusBadRequest, "Invalid JSON request body")
-		return nil
+		return
 	}
 
 	if err := input.validateInput(); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
-		return nil
+		return
 	}
 
 	var newCustomer = []Customer{
 		{ID: newID, Name: input.Name, Role: input.Role, Email: input.Email, Phone: input.Phone, Contacted: false},
 	}
 
-	customers := append(customers, newCustomer...)
+	customers = append(customers, newCustomer...)
 	writeJSON(w, http.StatusCreated, customers)
-	return customers
 }
 
-func GetCustomer(w http.ResponseWriter, r *http.Request, id int) {
+func GetCustomer(w http.ResponseWriter, r *http.Request) {
 	rawID := r.URL.Query().Get("id")
 
 	id, err := strconv.Atoi(rawID)
@@ -96,14 +96,13 @@ func UpdateCustomer(w http.ResponseWriter, r *http.Request) {
 			customers[i].Role = update.Role
 			customers[i].Email = update.Email
 			customers[i].Phone = update.Phone
-			if update.Contacted != false || true {
-				// Do not assign new value
-			} else {
-				customers[i].Contacted = update.Contacted
-			}
+			customers[i].Contacted = update.Contacted
+			writeJSON(w, http.StatusOK, customers[i])
 			return
 		}
 	}
+
+	writeError(w, http.StatusNotFound, "Customer not found")
 }
 
 func DeleteCustomer(w http.ResponseWriter, r *http.Request) {
@@ -196,9 +195,36 @@ func (c *Customer) validateUpdate() error {
 	if strings.TrimSpace(c.Phone) == "" {
 		return errors.New("phone is missing")
 	}
+	if !c.Contacted {
+		return errors.New("contacted is missing")
+	}
 	return nil
 }
 
-func main() {
+func newRouter() http.Handler {
+	mux := http.NewServeMux()
 
+	mux.HandleFunc("POST /customers", CreateCustomer)
+	mux.HandleFunc("GET /customers", GetCustomer)
+	mux.HandleFunc("PUT /customers", UpdateCustomer)
+	mux.HandleFunc("DELETE /customer", DeleteCustomer)
+
+	return mux
+}
+
+func main() {
+	port := "8080"
+	addr := ":" + port
+
+	server := &http.Server{
+		Addr:              addr,
+		Handler:           newRouter(),
+		ReadHeaderTimeout: 5 * time.Second,
+	}
+
+	log.Printf("CRM API listening on http://localhost%s", addr)
+	if err := server.ListenAndServe(); err != nil &&
+		!errors.Is(err, http.ErrServerClosed) {
+		log.Fatal(err)
+	}
 }
